@@ -1,0 +1,178 @@
+# ==========================================
+# 全局通用排除配置
+# ==========================================
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE 和编辑器
+.idea/
+.vscode/
+.history/
+.trae/
+*.swp
+*.swo
+*~
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.bak
+*.temp
+*.cache
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Node.js 相关（根目录）
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================
+# 1. 前端项目排除 (front/)
+# ==========================================
+# 依赖包
+front/node_modules/
+
+# 构建输出
+front/dist/
+front/dist-ssr/
+front/build/
+
+# 环境变量（可能包含敏感信息）
+front/.env.local
+front/.env.*.local
+front/.env.production
+
+# 缓存和临时文件
+front/.eslintcache
+front/.stylelintcache
+front/.vue
+front/tsconfig.tsbuildinfo
+
+# 测试覆盖率
+front/coverage/
+
+# ==========================================
+# 2. Java 后端排除 (sa-sentiment02/)
+# ==========================================
+# Maven/Gradle 构建输出
+sa-sentiment02/target/
+sa-sentiment02/out/
+sa-sentiment02/classes/
+sa-sentiment02/*.jar
+sa-sentiment02/*.war
+
+# Eclipse 配置
+sa-sentiment02/.project
+sa-sentiment02/.classpath
+sa-sentiment02/.settings/
+sa-sentiment02/.springBeans
+
+# IDEA 模块文件
+sa-sentiment02/*.iml
+
+# 崩溃日志
+sa-sentiment02/hs_err_pid*.log
+sa-sentiment02/replay_pid*.log
+
+# 编译产物
+sa-sentiment02/bin/
+
+# ==========================================
+# 3. Python 模型端/FastAPI排除 (model1/)
+# ==========================================
+# Python 字节码
+model1/__pycache__/
+model1/**/*.py[cod]
+model1/*$py.class
+
+# 虚拟环境
+model1/.venv/
+model1/venv/
+model1/env/
+model1/.env/
+
+# PyTorch 和深度学习模型权重（体积大，可重新训练）
+model1/**/*.pt
+model1/**/*.pth
+model1/**/*.bin
+model1/**/*.msgpack
+model1/**/*.safetensors
+model1/**/*.h5
+model1/**/*.ckpt
+model1/model/saved_models/
+model1/train/models_save/
+
+# 预训练模型目录（极其庞大）
+model1/train/pretrained_models/
+
+# 训练日志和检查点
+model1/logs/
+model1/train/logs/
+model1/**/session_tmp_logs/
+
+# 用户上传的文件数据
+model1/data/uploads/
+model1/app/data/uploads/
+
+# 数据集（可选，如果数据集很大建议不上传）
+# model1/data/clean/
+# model1/data/eval/
+# model1/data/test/
+# model1/data/train/
+
+# Jupyter Notebook 检查点
+model1/.ipynb_checkpoints/
+
+# ==========================================
+# 4. 数据库相关文件（可选，根据需求决定）
+# ==========================================
+# 如果数据库是 H2 等嵌入式数据库，排除数据文件
+*.db
+*.h2.db
+*.trace.db
+
+# SQL 导入产生的大型数据文件
+*.sql.bak
+
+# ==========================================
+# 5. 其他备份和压缩文件
+# ==========================================
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tgz
+
+# 老版本备份
+老前端备份/
+老后端备份/
+
+# 文档中的临时文件
+*.md.bak
