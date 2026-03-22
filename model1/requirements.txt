@@ -1,0 +1,11 @@
+fastapi>=0.68.0
+uvicorn>=0.15.0
+torch>=1.9.0
+transformers>=4.20.0
+pydantic>=1.8.0
+numpy>=1.21.0
+python-multipart>=0.0.6
+safetensors
+# pydantic-settings 可选安装，如果没有会使用内置替代
+pydantic-settings>=2.0.0
+jieba>=0.42.1

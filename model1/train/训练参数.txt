@@ -1,0 +1,324 @@
+# RTX3060渐进式训练参数优化方案
+# 针对R6800H + RTX3060 8GB + 16GB内存
+# SMP2020通用数据集六类情绪分类
+
+==========================================
+第一阶段：基础参数配置 (保守开始)
+==========================================
+
+# --- 训练超参数 (基础配置) ---
+max_seq_length = 256
+train_batch_size = 16          # 保守批次大小
+eval_batch_size = 32
+gradient_accumulation_steps = 2  # 有效批次: 32
+num_train_epochs = 5            # 适中训练轮数
+
+# --- 优化器与学习率调度器 (基础配置) ---
+learning_rate = 2e-5           # 标准学习率
+weight_decay = 0.01
+adam_epsilon = 1e-8
+max_grad_norm = 1.0
+warmup_rate = 0.1              # 10%预热
+
+# 差分学习率与冻结策略 (第一阶段不启用)
+backbone_lr = None             # 使用统一学习率
+head_lr = None                 # 使用统一学习率
+freeze_backbone_epochs = 0     # 不冻结
+
+# --- 高级训练技巧 (基础配置) ---
+use_amp = True                 # 启用混合精度
+label_smoothing = 0.1          # 轻度标签平滑
+dropout_rate = 0.2             # 标准dropout
+early_stopping_patience = 3    # 标准早停
+
+# --- 日志与评估 ---
+logging_steps = 50
+eval_steps = 200
+save_steps = 500
+
+==========================================
+第二阶段：显存优化配置 (提升批次)
+==========================================
+
+# --- 训练超参数 (显存优化) ---
+max_seq_length = 256
+train_batch_size = 20          # 提升批次大小
+eval_batch_size = 40
+gradient_accumulation_steps = 2  # 有效批次: 40
+num_train_epochs = 6            # 增加训练轮数
+
+# --- 优化器与学习率调度器 (显存优化) ---
+learning_rate = 2.5e-5         # 略微提升学习率
+weight_decay = 0.01
+adam_epsilon = 1e-8
+max_grad_norm = 1.0
+warmup_rate = 0.1
+
+# 差分学习率与冻结策略 (开始启用)
+backbone_lr = 2e-5             # 骨干网络标准学习率
+head_lr = 3e-5                 # 分类头稍高学习率
+freeze_backbone_epochs = 0     # 仍不冻结
+
+# --- 高级训练技巧 (显存优化) ---
+use_amp = True
+label_smoothing = 0.1
+dropout_rate = 0.25            # 增加dropout防止过拟合
+early_stopping_patience = 4    # 增加耐心值
+
+# --- 日志与评估 ---
+logging_steps = 40             # 更频繁日志
+eval_steps = 180
+save_steps = 400
+
+==========================================
+第三阶段：差分学习率优化 (精细调优)
+==========================================
+
+# --- 训练超参数 (差分优化) ---
+max_seq_length = 256
+train_batch_size = 24          # 进一步提升批次
+eval_batch_size = 48
+gradient_accumulation_steps = 2  # 有效批次: 48
+num_train_epochs = 7
+
+# --- 优化器与学习率调度器 (差分优化) ---
+learning_rate = 2e-5           # 基础学习率
+weight_decay = 0.01
+adam_epsilon = 1e-8
+max_grad_norm = 1.0
+warmup_rate = 0.12             # 增加预热比例
+
+# 差分学习率与冻结策略 (精细配置)
+backbone_lr = 1.5e-5           # 骨干网络较低学习率 (更稳定)
+head_lr = 3.5e-5               # 分类头较高学习率 (快速适配)
+freeze_backbone_epochs = 1     # 第一轮冻结骨干网络
+
+# --- 高级训练技巧 (差分优化) ---
+use_amp = True
+label_smoothing = 0.15         # 增强标签平滑
+dropout_rate = 0.3             # 更强正则化
+early_stopping_patience = 4
+
+# 学习率调度器优化
+scheduler_type = 'cosine'      # 余弦退火
+dynamic_schedule = True
+
+# --- 日志与评估 ---
+logging_steps = 30
+eval_steps = 150
+save_steps = 300
+
+==========================================
+第四阶段：模型特定优化 (最高性能)
+==========================================
+
+# --- RoBERTa基础模型最高优化 (统一消融) ---
+roberta_base_optimal = {
+    'max_seq_length': 256,
+    'train_batch_size': 18,    # 统一 Batch Size
+    'eval_batch_size': 36,
+    'gradient_accumulation_steps': 2,
+    'num_train_epochs': 10,    # 统一 Epochs
+    
+    'learning_rate': 2e-5,     # 统一 LR
+    'backbone_lr': 1.6e-5,
+    'head_lr': 3e-5,
+    'weight_decay': 0.01,
+    'warmup_rate': 0.1,
+    
+    'label_smoothing': 0.1,
+    'dropout_rate': 0.3,
+    'early_stopping_patience': 4,
+    'use_amp': True,
+    'scheduler_type': 'cosine'
+}
+
+# --- RoBERTa + BiLSTM + Attention最高优化 (统一消融) ---
+roberta_bilstm_optimal = {
+    'max_seq_length': 256,
+    'train_batch_size': 18,    # 统一 Batch Size
+    'eval_batch_size': 36,
+    'gradient_accumulation_steps': 2,
+    'num_train_epochs': 10,    # 统一 Epochs
+    
+    'learning_rate': 2e-5,     # 统一 LR
+    'backbone_lr': 1.6e-5,
+    'head_lr': 3e-5,
+    'weight_decay': 0.01,
+    'warmup_rate': 0.1,
+    
+    'label_smoothing': 0.1,
+    'dropout_rate': 0.3,
+    'early_stopping_patience': 4,
+    'use_amp': True,
+    'scheduler_type': 'cosine',
+    
+    # 模型结构优化
+    'lstm_hidden_size': 384,
+    'lstm_num_layers': 2,
+    'hidden_size': 384,
+    'num_attention_heads': 12,
+    'freeze_backbone_epochs': 1
+}
+
+# --- RoBERTa + GRU + Attention最高优化 (统一消融) ---
+roberta_gru_optimal = {
+    'max_seq_length': 256,
+    'train_batch_size': 18,    # 统一 Batch Size
+    'eval_batch_size': 36,
+    'gradient_accumulation_steps': 2,
+    'num_train_epochs': 10,    # 统一 Epochs
+    
+    'learning_rate': 2e-5,     # 统一 LR
+    'backbone_lr': 1.6e-5,
+    'head_lr': 3e-5,
+    'weight_decay': 0.01,
+    'warmup_rate': 0.1,
+    
+    'label_smoothing': 0.1,
+    'dropout_rate': 0.3,
+    'early_stopping_patience': 4,
+    'use_amp': True,
+    'scheduler_type': 'cosine',
+    
+    # 模型结构优化
+    'gru_hidden_size': 384,
+    'gru_num_layers': 2,
+    'hidden_size': 384,
+    'num_attention_heads': 12,
+    'freeze_backbone_epochs': 1
+}
+
+# --- 纯 BiLSTM + Attention 最高优化 (Baseline) ---
+bilstm_attention_optimal = {
+    'max_seq_length': 256,
+    'train_batch_size': 32,
+    'eval_batch_size': 64,
+    'gradient_accumulation_steps': 1,
+    'num_train_epochs': 25,
+    'learning_rate': 1e-3,
+    'backbone_lr': 1e-3,
+    'head_lr': 1e-3,
+    'weight_decay': 0.01,
+    'warmup_rate': 0.1,
+    'label_smoothing': 0.15,
+    'dropout_rate': 0.35,
+    'early_stopping_patience': 6,
+    'use_amp': True,
+    'scheduler_type': 'cosine',
+    'embedding_dim': 300,
+    'lstm_hidden_size': 384,
+    'lstm_num_layers': 2,
+    'hidden_size': 384,
+    'num_attention_heads': 12,
+    'freeze_backbone_epochs': 0
+}
+
+==========================================
+第五阶段：极限优化 (实验性配置)
+==========================================
+
+# --- 训练超参数 (极限优化) ---
+max_seq_length = 320          # 增加序列长度捕获更多上下文
+train_batch_size = 32          # 极限批次大小 (需谨慎)
+eval_batch_size = 64
+gradient_accumulation_steps = 1  # 直接使用大批次
+num_train_epochs = 10           # 充分训练
+
+# --- 优化器与学习率调度器 (极限优化) ---
+learning_rate = 1.5e-5          # 更小更稳定的学习率
+weight_decay = 0.02             # 更强的正则化
+adam_epsilon = 1e-8
+max_grad_norm = 0.5             # 更严格的梯度裁剪
+warmup_rate = 0.2               # 更长的预热期
+
+# 差分学习率与冻结策略 (极限配置)
+backbone_lr = 1e-5              # 骨干网络极小学习率
+head_lr = 2.5e-5                # 分类头适中学习率
+freeze_backbone_epochs = 2     # 前两轮冻结骨干网络
+
+# --- 高级训练技巧 (极限优化) ---
+use_amp = True
+label_smoothing = 0.2           # 强标签平滑
+dropout_rate = 0.4             # 强dropout
+early_stopping_patience = 6     # 更多耐心
+
+# 高级优化策略
+scheduler_type = 'cosine_with_restarts'  # 周期性重启
+dynamic_schedule = True
+cycle_length = 3                # 每3轮重启学习率
+cycle_decay = 0.8               # 重启衰减
+
+# --- 日志与评估 ---
+logging_steps = 20              # 极频繁监控
+eval_steps = 100
+save_steps = 200
+
+==========================================
+使用建议
+==========================================
+
+1. **渐进式使用**：
+   - 新手建议从第一阶段开始
+   - 有经验用户可从第三阶段开始
+   - 第五阶段需要充足的显存和时间
+
+2. **模型选择建议**：
+   - 追求稳定性：选择RoBERTa基础模型
+   - 追求性能：选择BiLSTM+Attention
+   - 平衡选择：GRU+Attention
+
+3. **硬件监控**：
+   - RTX3060 8GB建议保持在4阶段内
+   - 监控显存使用，避免OOM
+   - 注意GPU温度控制
+
+4. **参数调整原则**：
+   - 学习率：batch_size越大，learning_rate越小
+   - dropout：模型越复杂，dropout越大
+   - 早停：数据量越小，patience越大
+   - 预热：batch_size越大，warmup越长
+
+5. **实验记录**：
+   - 记录每阶段的关键指标
+   - 对比不同参数的效果
+   - 选择最适合自己数据的配置
+
+==========================================
+性能预期 (RTX3060 8GB)
+==========================================
+
+第一阶段：
+- 训练时间：~2-3小时
+- 显存使用：~4-5GB
+- 预期F1：0.80-0.83
+
+第二阶段：
+- 训练时间：~3-4小时  
+- 显存使用：~5-6GB
+- 预期F1：0.82-0.85
+
+第三阶段：
+- 训练时间：~4-5小时
+- 显存使用：~6-7GB
+- 预期F1：0.84-0.87
+
+第四阶段：
+- 训练时间：~5-6小时
+- 显存使用：~7-7.5GB
+- 预期F1：0.86-0.89
+
+第五阶段：
+- 训练时间：~7-8小时
+- 显存使用：~7.5-8GB
+- 预期F1：0.87-0.90
+
+==========================================
+注意事项
+==========================================
+
+1. 第五阶段可能在RTX3060上出现OOM
+2. 具体效果取决于数据质量和随机种子
+3. 建议在每个阶段都进行验证集测试
+4. 保存每个阶段的最佳模型用于对比
+5. 根据实际效果微调参数
