@@ -1,7 +1,6 @@
 <template>
   <el-container class="layout-container">
-    <!-- 侧边栏 -->
-    <el-aside width="220px" class="aside">
+    <el-aside v-if="!isMobile" width="220px" class="aside">
       <div class="logo" @click="router.push('/')">
         <el-icon class="logo-icon"><TrendCharts /></el-icon>
         <span class="logo-text">情感分析平台</span>
@@ -64,12 +63,82 @@
       </el-menu>
     </el-aside>
 
+    <el-drawer
+      v-model="mobileMenuVisible"
+      direction="ltr"
+      size="220px"
+      :with-header="false"
+      class="mobile-menu-drawer"
+    >
+      <div class="logo" @click="handleLogoClick">
+        <el-icon class="logo-icon"><TrendCharts /></el-icon>
+        <span class="logo-text">情感分析平台</span>
+      </div>
+      <el-menu
+        :default-active="activeMenu"
+        class="el-menu-vertical-demo"
+        :router="true"
+        unique-opened
+        background-color="#304156"
+        text-color="#bfcbd9"
+        active-text-color="#409EFF"
+        @select="handleSelect"
+      >
+        <el-menu-item index="/">
+          <el-icon><House /></el-icon>
+          <span>首页</span>
+        </el-menu-item>
+
+        <el-sub-menu index="sentiment">
+          <template #title>
+            <el-icon><EditPen /></el-icon>
+            <span>情感分析</span>
+          </template>
+          <el-menu-item index="/predict">
+            <el-icon><Monitor /></el-icon>
+            <span>在线预测</span>
+          </el-menu-item>
+          <el-menu-item index="/visualization">
+            <el-icon><TrendCharts /></el-icon>
+            <span>{{ userRole === 'ADMIN' ? '全站记录' : '我的记录' }}</span>
+          </el-menu-item>
+        </el-sub-menu>
+
+        <el-menu-item index="/notices">
+          <el-icon><Bell /></el-icon>
+          <span>公告与反馈</span>
+        </el-menu-item>
+
+        <el-sub-menu index="account" v-if="isAuthenticated">
+          <template #title>
+            <el-icon><User /></el-icon>
+            <span>个人中心</span>
+          </template>
+          <el-menu-item index="/profile">基本资料</el-menu-item>
+          <el-menu-item index="/profile?tab=security">修改密码</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="admin" v-if="userRole === 'ADMIN'">
+          <template #title>
+            <el-icon><Setting /></el-icon>
+            <span>系统管理</span>
+          </template>
+          <el-menu-item index="/admin">
+            <el-icon><Odometer /></el-icon>
+            <span>管理员仪表盘</span>
+          </el-menu-item>
+        </el-sub-menu>
+      </el-menu>
+    </el-drawer>
+
     <el-container class="main-container">
       <!-- 顶部导航栏 -->
       <el-header class="header">
         <div class="header-left">
-          <!-- 面包屑导航 -->
-          <el-breadcrumb separator="/">
+          <el-button v-if="isMobile" text class="menu-toggle-btn" @click="mobileMenuVisible = true">
+            <el-icon><Fold /></el-icon>
+          </el-button>
+          <el-breadcrumb v-if="!isMobile" separator="/">
             <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item v-for="item in breadcrumbItems" :key="item.path" :to="item.to">
               {{ item.title }}
@@ -165,11 +234,11 @@
 <script setup>
 import { 
   TrendCharts, ArrowDown, EditPen, House, SwitchButton, 
-  User, Setting, Bell, Tools, Monitor, Odometer
+  User, Setting, Bell, Monitor, Odometer, Fold
 } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
@@ -181,6 +250,8 @@ const unreadCount = ref(0)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const dialogContent = ref('')
+const isMobile = ref(false)
+const mobileMenuVisible = ref(false)
 
 // 计算属性
 const userInfo = computed(() => authStore.userInfo)
@@ -234,10 +305,24 @@ const getRoleText = (role) => {
   return roleMap[role] || '用户'
 }
 
+const updateViewport = () => {
+  isMobile.value = window.innerWidth <= 992
+  if (!isMobile.value) {
+    mobileMenuVisible.value = false
+  }
+}
+
+const handleLogoClick = () => {
+  router.push('/')
+  mobileMenuVisible.value = false
+}
+
 // 处理菜单选择
 const handleSelect = (index) => {
-  // 强制导航，以防 el-menu 的 router 模式失效
   router.push(index)
+  if (isMobile.value) {
+    mobileMenuVisible.value = false
+  }
 }
 
 // 显示通知
@@ -286,16 +371,26 @@ const handleLogout = async () => {
 
 // 监听路由变化
 watch(() => route.path, () => {
+  mobileMenuVisible.value = false
   if (isAuthenticated.value && Math.random() > 0.7) {
     unreadCount.value = Math.floor(Math.random() * 5)
   }
 }, { immediate: true })
 
+onMounted(() => {
+  updateViewport()
+  window.addEventListener('resize', updateViewport)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateViewport)
+})
+
 </script>
 
 <style scoped>
 .layout-container {
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .aside {
@@ -343,9 +438,21 @@ watch(() => route.path, () => {
   height: 60px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.menu-toggle-btn {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
 .header-right {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .user-section {
@@ -358,6 +465,7 @@ watch(() => route.path, () => {
   display: flex;
   align-items: center;
   cursor: pointer;
+  min-width: 0;
 }
 
 .user-details {
@@ -370,6 +478,10 @@ watch(() => route.path, () => {
   font-size: 14px;
   font-weight: 500;
   color: #333;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-role {
@@ -378,9 +490,10 @@ watch(() => route.path, () => {
 }
 
 .main-container {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .main-content {
@@ -388,6 +501,11 @@ watch(() => route.path, () => {
   padding: 20px;
   flex: 1;
   overflow-y: auto;
+}
+
+.content-wrapper {
+  width: 100%;
+  min-width: 0;
 }
 
 .footer {
@@ -412,5 +530,47 @@ watch(() => route.path, () => {
 .fade-transform-leave-to {
   opacity: 0;
   transform: translateX(30px);
+}
+
+:deep(.mobile-menu-drawer .el-drawer__body) {
+  padding: 0;
+  background-color: #304156;
+}
+
+@media (max-width: 992px) {
+  .layout-container {
+    display: block;
+  }
+
+  .header {
+    padding: 0 12px;
+  }
+
+  .header-right {
+    margin-left: 8px;
+  }
+
+  .user-details {
+    display: none;
+  }
+
+  .auth-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .auth-btn {
+    padding: 8px 10px;
+    margin-left: 0 !important;
+  }
+
+  .main-content {
+    padding: 12px;
+  }
+
+  .footer {
+    padding: 8px 0;
+  }
 }
 </style>

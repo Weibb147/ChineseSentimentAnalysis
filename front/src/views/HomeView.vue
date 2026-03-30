@@ -11,7 +11,7 @@
         <p>本系统基于先进的RoBERTa模型，能够准确分析中文文本的情感倾向。</p>
         <div class="features">
           <el-row :gutter="20">
-            <el-col :span="8">
+            <el-col :xs="24" :sm="12" :lg="8">
               <el-card class="feature-card" @click="goToPredict">
                 <el-icon :size="30" color="#409EFF"><EditPen /></el-icon>
                 <h3>情感预测</h3>
@@ -21,7 +21,7 @@
                 </div>
               </el-card>
             </el-col>
-            <el-col :span="8">
+            <el-col :xs="24" :sm="12" :lg="8">
               <el-card class="feature-card" @click="goToHistory">
                 <el-icon :size="30" color="#67C23A"><TrendCharts /></el-icon>
                 <h3>情感预测记录</h3>
@@ -31,7 +31,7 @@
                 </div>
               </el-card>
             </el-col>
-            <el-col :span="8">
+            <el-col :xs="24" :sm="24" :lg="8">
               <el-card class="feature-card" @click="goToNotices">
                 <el-icon :size="30" color="#E6A23C"><Bell /></el-icon>
                 <h3>公告与反馈</h3>

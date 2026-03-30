@@ -5,6 +5,8 @@
   margin: 0 auto;
   padding: 0;
   font-weight: normal;
+  min-width: 0;
+  width: 100%;
 }
 
 a,
@@ -31,5 +33,89 @@ a,
   #app {
     width: 100%;
     padding: 0;
+  }
+}
+
+@media (max-width: 992px) {
+  html,
+  body,
+  #app {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .el-main {
+    padding: 12px !important;
+  }
+
+  .el-card {
+    border-radius: 8px;
+  }
+
+  .el-card__body {
+    padding: 14px !important;
+  }
+
+  .el-dialog {
+    width: 94vw !important;
+    max-width: 94vw !important;
+    margin-top: 4vh !important;
+  }
+
+  .el-drawer {
+    max-width: 88vw !important;
+  }
+
+  .el-space {
+    flex-wrap: wrap !important;
+    row-gap: 8px !important;
+  }
+
+  .el-space__item {
+    max-width: 100%;
+  }
+
+  .el-form-item {
+    margin-bottom: 14px !important;
+  }
+
+  .el-form-item__label {
+    line-height: 1.4 !important;
+  }
+
+  .el-input,
+  .el-select,
+  .el-cascader,
+  .el-input-number,
+  .el-date-editor.el-input,
+  .el-date-editor.el-input__wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .el-button {
+    min-height: 36px;
+  }
+
+  .el-pagination {
+    justify-content: center !important;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .el-table {
+    width: 100%;
+    font-size: 12px;
+  }
+
+  .el-table__inner-wrapper {
+    min-width: 720px;
+  }
+
+  .el-table__header-wrapper,
+  .el-table__body-wrapper,
+  .el-table__footer-wrapper {
+    overflow-x: auto !important;
   }
 }
